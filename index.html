@@ -479,17 +479,17 @@
   /* ============================================================
      STATE
      ============================================================ */
+  /* ============================================================
+     SETTINGS
+     ============================================================ */
+  const DEFAULTS = { zoom:1, fontSize:15, margin:12, cellHeight:80, padding:6, dayWidth:90 };
+
   let currentView   = 'week';
   let weekOffset    = 0;
   let currentDay    = new Date(today);
   let monthOffset   = 0;
   let events        = [...DUMMY];
   let settings      = loadSettings();
-
-  /* ============================================================
-     SETTINGS
-     ============================================================ */
-  const DEFAULTS = { zoom:1, fontSize:15, margin:12, cellHeight:80, padding:6, dayWidth:90 };
 
   function loadSettings() {
     try { return { ...DEFAULTS, ...JSON.parse(localStorage.getItem('fp_settings')||'{}') }; }
