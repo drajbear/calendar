@@ -409,8 +409,8 @@
     <input type="text" id="set-apikey" placeholder="AIzaSy…">
   </div>
   <div class="setting-group">
-    <label>Calendar IDs (Alex / Georgia / Charlie / House)</label>
-    <textarea id="set-calids" rows="5" placeholder="alex_cal_id@group.calendar.google.com&#10;georgia_cal_id@group.calendar.google.com&#10;charlie_cal_id@group.calendar.google.com&#10;house_cal_id@group.calendar.google.com"></textarea>
+    <label>Shared Calendar ID</label>
+    <textarea id="set-calids" rows="2" placeholder="familyplanner@gmail.com"></textarea>
   </div>
 
   <button class="btn" id="save-settings" style="width:100%;margin-bottom:8px;border-color:var(--color-accent-charlie);color:var(--color-accent-charlie);">💾 Save & Apply</button>
@@ -724,24 +724,22 @@
 
   async function fetchCalendars(){
     if(!settings.apiKey||!settings.calIds) return;
-    const ids=settings.calIds.split('\n').map(s=>s.trim()).filter(Boolean);
-    if(!ids.length) return;
+    const calId=settings.calIds.trim().split('\n')[0].trim();
+    if(!calId) return;
     STATUS.textContent='● Fetching…'; STATUS.className='';
     const tMin=new Date(today); tMin.setMonth(tMin.getMonth()-1);
     const tMax=new Date(today); tMax.setMonth(tMax.getMonth()+3);
-    const fetched=[];
     try{
-      for(let i=0;i<ids.length;i++){
-        const person=PEOPLE[i]||'house';
-        const url=`https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(ids[i])}/events?key=${settings.apiKey}&timeMin=${tMin.toISOString()}&timeMax=${tMax.toISOString()}&singleEvents=true&orderBy=startTime&maxResults=500`;
-        const res=await fetch(url);
-        if(!res.ok) throw new Error(`Cal ${i+1}: HTTP ${res.status}`);
-        const data=await res.json();
-        (data.items||[]).forEach(item=>{
-          fetched.push({ id:item.id, title:item.summary||'(no title)', start:item.start?.dateTime||item.start?.date||new Date().toISOString(), creator:person });
-        });
-      }
-      events=fetched;
+      const url=`https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calId)}/events?key=${settings.apiKey}&timeMin=${tMin.toISOString()}&timeMax=${tMax.toISOString()}&singleEvents=true&orderBy=startTime&maxResults=500`;
+      const res=await fetch(url);
+      if(!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data=await res.json();
+      events=(data.items||[]).map(item=>({
+        id: item.id,
+        title: item.summary||'(no title)',
+        start: item.start?.dateTime||item.start?.date||new Date().toISOString(),
+        creator: null,
+      }));
       STATUS.textContent=`● Live — updated ${new Date().toLocaleTimeString('en-GB')}`;
       STATUS.className='live';
       render();
